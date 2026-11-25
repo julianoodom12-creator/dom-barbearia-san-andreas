@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dom Barbearia — Francisco Beltrão PR</title>
+<style>
+  :root{
+    --green:#4caf50;
+    --green-dark:#2e7d32;
+    --purple:#8e44ad;
+    --purple-dark:#5b2c6f;
+    --orange:#e67e22;
+    --orange-dark:#a04000;
+    --blue:#3498db;
+    --yellow:#f1c40f;
+    --cream:#f5e6c8;
+    --ink:#1a1a0f;
+    --darker:#0f0f08;
+    --paper:#e8dcc0;
+    --capa: url("capa.jpg");
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    font-family:'Arial Black','Impact','Helvetica Neue',sans-serif;
+    background:var(--ink);color:var(--cream);
+    overflow-x:hidden;line-height:1.4;
+    transition:background 0.8s ease;
+  }
+  body::after{
+    content:"";position:fixed;inset:0;pointer-events:none;z-index:9998;opacity:.1;
+    background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    animation:grain .5s steps(2) infinite;
+  }
+  @keyframes grain{0%{transform:translate(0,0)}50%{transform:translate(-2%,1%)}100%{transform:translate(1%,-1%)}}
+
+  /* BOTÃO RGB FLUTUANTE */
+  .rgb-btn {
+    position: fixed; bottom: 1.5rem; left: 1.5rem; z-index: 10000;
+    width: 64px; height: 64px; border-radius: 50%;
+    border: 3px solid var(--ink); cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; text-shadow: 1px 1px 2px rgba(0,0,0,.8);
+    animation: rgbGlow 8s linear infinite, rgbBg 8s linear infinite;
+    transition: transform .15s ease;
+  }
+  .rgb-btn:hover { transform: scale(1.08); }
+  .rgb-btn svg { width: 28px; height: 28px; fill: currentColor; }
+
+  @keyframes rgbGlow {
+    0%   { box-shadow: 0 0 0 0 #ff0000, 0 0 22px 6px #ff0000; }
+    11%  { box-shadow: 0 0 0 0 #0066ff, 0 0 22px 6px #0066ff; }
+    22%  { box-shadow: 0 0 0 0 #ffd000, 0 0 22px 6px #ffd000; }
+    33%  { box-shadow: 0 0 0 0 #00c853, 0 0 22px 6px #00c853; }
+    44%  { box-shadow: 0 0 0 0 #ff8c00, 0 0 22px 6px #ff8c00; }
+    55%  { box-shadow: 0 0 0 0 #ff2e88, 0 0 22px 6px #ff2e88; }
+    66%  { box-shadow: 0 0 0 0 #8e44ad, 0 0 22px 6px #8e44ad; }
+    77%  { box-shadow: 0 0 0 0 #ff2e88, 0 0 22px 6px #ff2e88; }
+    88%  { box-shadow: 0 0 0 0 #b8e600, 0 0 22px 6px #b8e600; }
+    100% { box-shadow: 0 0 0 0 #ff0000, 0 0 22px 6px #ff0000; }
+  }
+  @keyframes rgbBg {
+    0%, 100% { background-color: #ff0000; }
+    11% { background-color: #0066ff; }
+    22% { background-color: #ffd000; }
+    33% { background-color: #00c853; }
+    44% { background-color: #ff8c00; }
+    55% { background-color: #ff2e88; }
+    66% { background-color: #8e44ad; }
+    77% { background-color: #ff2e88; }
+    88% { background-color: #b8e600; }
+  }
+
+  body.rgb-mode-active { animation: bgPulse 8s linear infinite; }
+  @keyframes bgPulse {
+    0%, 100% { background-color: #3a0000; }
+    11% { background-color: #001b3a; }
+    22% { background-color: #3a3000; }
+    33% { background-color: #00330f; }
+    44% { background-color: #3a1f00; }
+    55% { background-color: #3a0020; }
+    66% { background-color: #1f0033; }
+    77% { background-color: #3a0020; }
+    88% { background-color: #2a3300; }
+  }
+  body.rgb-mode-active section,
+  body.rgb-mode-active footer,
+  body.rgb-mode-active .hero {
+    background: rgba(15, 15, 8, 0.65) !important;
+    transition: background 0.8s ease;
+  }
+
+  /* HERO */
+  .hero{
+    position:relative;min-height:100vh;display:flex;flex-direction:column;
+    justify-content:center;align-items:center;text-align:center;padding:2rem;
+    overflow:hidden;background:var(--darker);
+  }
+  .hero-bg{
+    position:absolute;inset:0;z-index:0;
+    background-image:var(--capa);
+    background-size:cover;background-position:center top;background-repeat:no-repeat;
+    filter:contrast(1.1) saturate(1.2) brightness(.75) hue-rotate(-8deg);
+    transform:scale(1.03);animation:slowzoom 26s ease-in-out infinite alternate;
+  }
+  @keyframes slowzoom{from{transform:scale(1.03)}to{transform:scale(1.1)}}
+  .hero-tint{
+    position:absolute;inset:0;z-index:1;pointer-events:none;
+    background:
+      radial-gradient(ellipse at 50% 100%,rgba(230,126,34,.45),transparent 55%),
+      radial-gradient(ellipse at 15% 20%,rgba(76,175,80,.3),transparent 50%),
+      radial-gradient(ellipse at 85% 15%,rgba(142,68,173,.25),transparent 50%),
+      linear-gradient(180deg,rgba(15,15,8,.55) 0%,rgba(15,15,8,.1) 35%,rgba(15,15,8,.85) 100%);
+    mix-blend-mode:multiply;
+  }
+  .hero-veil{
+    position:absolute;inset:0;z-index:1;pointer-events:none;
+    background:linear-gradient(180deg,rgba(15,15,8,.7) 0%,rgba(15,15,8,.05) 30%,rgba(15,15,8,.25) 60%,rgba(15,15,8,.95) 100%);
+  }
+  .sun{
+    position:absolute;bottom:-40%;left:50%;transform:translateX(-50%);z-index:1;
+    width:120vw;height:120vw;max-width:1400px;max-height:1400px;
+    background:radial-gradient(circle,rgba(230,126,34,.32),rgba(142,68,173,.12) 45%,transparent 65%);
+    filter:blur(24px);pointer-events:none;
+  }
+
+  /* HUD SAN ANDREAS */
+  .hud-top{
+    position:absolute;top:0;left:0;right:0;z-index:3;
+    display:flex;justify-content:space-between;align-items:center;
+    padding:1.2rem 1.6rem;
+    font-family:system-ui,sans-serif;font-size:.75rem;
+    letter-spacing:.25em;text-transform:uppercase;
+    color:rgba(245,230,200,.8);
+  }
+  .hud-top .wanted{
+    color:var(--yellow);text-shadow:0 0 12px rgba(241,196,15,.6);
+    border:2px solid var(--yellow);padding:.3rem .7rem;font-weight:900;letter-spacing:.15em;
+    background:rgba(15,15,8,.4);
+  }
+  .hud-top .cash{
+    color:var(--green);text-shadow:0 0 12px rgba(76,175,80,.6);
+    font-weight:900;background:rgba(15,15,8,.4);padding:.3rem .7rem;
+    border:2px solid rgba(76,175,80,.4);
+  }
+  
+  .hud-bars{
+    position:absolute;bottom:1.5rem;left:1.5rem;z-index:3;
+    display:flex;flex-direction:column;gap:.4rem;
+    font-family:system-ui,sans-serif;font-size:.6rem;font-weight:700;
+    letter-spacing:.2em;text-transform:uppercase;
+  }
+  .hud-bars .bar{display:flex;align-items:center;gap:.5rem;}
+  .hud-bars .bar .label{color:rgba(245,230,200,.7);width:48px;text-shadow:0 1px 4px rgba(0,0,0,.9)}
+  .hud-bars .bar .track{width:120px;height:8px;background:rgba(15,15,8,.6);border:2px solid var(--ink);overflow:hidden;}
+  .hud-bars .bar .fill{height:100%}
+  .hud-bars .bar .fill.health{background:var(--green);width:85%;box-shadow:0 0 8px rgba(76,175,80,.7)}
+  .hud-bars .bar .fill.armor{background:var(--blue);width:65%;box-shadow:0 0 8px rgba(52,152,219,.7)}
+
+  h1.logo{
+    position:relative;z-index:2;font-weight:900;
+    font-size:clamp(3.6rem,15vw,11rem);line-height:.85;letter-spacing:-.02em;text-transform:uppercase;
+    color:var(--cream);
+    text-shadow:3px 3px 0 var(--green),6px 6px 0 var(--purple),9px 9px 0 var(--orange),12px 12px 0 var(--ink),0 0 90px rgba(230,126,34,.5);
+    transform:skew(-6deg) rotate(-1deg);margin-bottom:.6rem;-webkit-text-stroke:2px var(--ink);
+  }
+  h1.logo span{
+    display:block;font-size:.28em;letter-spacing:.5em;color:var(--yellow);
+    text-shadow:2px 2px 0 var(--ink),4px 4px 0 var(--purple),0 0 30px rgba(241,196,15,.7);
+    transform:skew(6deg);margin-top:.8rem;-webkit-text-stroke:1px var(--ink);
+  }
+  .hero-tag{
+    position:relative;z-index:2;font-weight:700;font-size:.8rem;letter-spacing:.55em;text-transform:uppercase;
+    color:var(--yellow);margin-bottom:1.5rem;text-shadow:0 0 20px rgba(241,196,15,.8);
+  }
+  .hero-sub{
+    position:relative;z-index:2;max-width:560px;margin:2rem auto 2.5rem;
+    font-weight:500;font-size:1.05rem;color:rgba(245,230,200,.95);letter-spacing:.03em;
+    text-shadow:0 2px 14px rgba(0,0,0,.95),0 0 30px rgba(0,0,0,.7);
+  }
+  .cta-row{position:relative;z-index:2;display:flex;gap:1rem;flex-wrap:wrap;justify-content:center}
+  .btn{
+    display:inline-block;padding:1rem 2.6rem;font-size:1rem;font-weight:900;text-transform:uppercase;letter-spacing:.14em;text-decoration:none;
+    border:3px solid var(--cream);color:var(--cream);background:transparent;transition:all .18s ease;cursor:pointer;
+    clip-path:polygon(6% 0,100% 0,94% 100%,0 100%);text-shadow:1px 1px 0 var(--ink);
+  }
+  .btn.solid{
+    background:linear-gradient(180deg,var(--green),var(--green-dark));border-color:var(--ink);color:var(--cream);
+    box-shadow:4px 4px 0 var(--ink),0 0 30px rgba(76,175,80,.5);text-shadow:2px 2px 0 var(--ink);
+  }
+  .btn:hover{background:var(--cream);color:var(--ink);transform:translateY(-3px) skewX(-4deg);text-shadow:none;}
+  .btn.solid:hover{
+    background:linear-gradient(180deg,var(--yellow),var(--orange));color:var(--ink);box-shadow:4px 4px 0 var(--ink),0 0 45px var(--yellow);
+  }
+  .scroll-hint{
+    position:absolute;bottom:2rem;right:1.5rem;z-index:2;font-size:.7rem;letter-spacing:.4em;
+    color:rgba(245,230,200,.7);text-transform:uppercase;animation:bob 2s ease-in-out infinite;
+    text-shadow:0 2px 8px rgba(0,0,0,.9);
+  }
+  @keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(8px)}}
+
+  /* SECTIONS */
+  section{padding:6rem 1.5rem;position:relative}
+  .wrap{max-width:1100px;margin:0 auto}
+  .kicker{
+    font-weight:700;font-size:.8rem;letter-spacing:.5em;text-transform:uppercase;
+    color:var(--yellow);margin-bottom:1rem;text-shadow:0 0 16px rgba(241,196,15,.6);
+  }
+  h2{
+    font-weight:900;font-size:clamp(2.4rem,6vw,4.5rem);line-height:.88;text-transform:uppercase;
+    letter-spacing:-.01em;margin-bottom:2.5rem;color:var(--cream);
+    text-shadow:3px 3px 0 var(--green),6px 6px 0 var(--purple),9px 9px 0 var(--ink);
+    transform:skew(-3deg);-webkit-text-stroke:1px var(--ink);
+  }
+
+  /* SERVIÇOS */
+  #servicos{background:linear-gradient(180deg,var(--ink),var(--darker))}
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1.5rem}
+  .card{
+    position:relative;padding:2rem 1.6rem;
+    background:linear-gradient(180deg,rgba(76,175,80,.08),rgba(142,68,173,.05));
+    border:3px solid var(--green);border-left:6px solid var(--yellow);
+    transition:all .2s ease;text-decoration:none;color:inherit;display:block;
+    box-shadow:4px 4px 0 rgba(0,0,0,.5);
+  }
+  .card::before{
+    content:"";position:absolute;top:0;left:0;right:0;height:4px;
+    background:repeating-linear-gradient(90deg,var(--green) 0 8px,var(--ink) 8px 16px);opacity:.7;
+  }
+  .card:hover{
+    transform:translateY(-6px) rotate(-.5deg);border-color:var(--yellow);
+    background:linear-gradient(180deg,rgba(76,175,80,.15),rgba(142,68,173,.1));
+    box-shadow:6px 6px 0 var(--ink),0 0 40px rgba(76,175,80,.4);
+  }
+  .card .num{font-weight:900;font-size:.75rem;letter-spacing:.3em;color:var(--yellow);margin-bottom:1rem;text-shadow:0 0 10px rgba(241,196,15,.5)}
+  .card h3{font-weight:900;font-size:1.7rem;text-transform:uppercase;margin-bottom:.6rem;letter-spacing:.01em;color:var(--cream);text-shadow:2px 2px 0 var(--ink)}
+  .card p{font-weight:400;color:rgba(245,230,200,.75);font-size:.95rem;margin-bottom:1rem}
+  .card .price{font-weight:900;font-size:1.9rem;color:var(--green);text-shadow:2px 2px 0 var(--ink),0 0 20px rgba(76,175,80,.5)}
+  .card .card-cta{
+    display:inline-block;margin-top:1rem;font-weight:700;font-size:.72rem;letter-spacing:.22em;text-transform:uppercase;
+    color:var(--orange);border-bottom:2px solid var(--orange);padding-bottom:.2rem;transition:color .15s ease,border-color .15s ease;
+  }
+  .card:hover .card-cta{color:var(--yellow);border-color:var(--yellow)}
+
+  /* SOBRE */
+  #sobre{background:var(--darker); padding-bottom: 0;}
+  .stripe{
+    display:flex;gap:2rem;overflow:hidden;white-space:nowrap;padding:1.5rem 0;margin-bottom:4rem;
+    border-top:4px solid var(--green);border-bottom:4px solid var(--purple);
+    background:linear-gradient(90deg,rgba(76,175,80,.1),rgba(142,68,173,.05));
+  }
+  .stripe-track{
+    display:flex;gap:2rem;animation:scroll 22s linear infinite;font-weight:900;
+    font-size:1.8rem;text-transform:uppercase;letter-spacing:.08em;
+    color:var(--cream);text-shadow:2px 2px 0 var(--ink);
+  }
+  .stripe-track span{opacity:.9}
+  .stripe-track span::after{content:"★";color:var(--yellow);margin-left:2rem;text-shadow:0 0 10px rgba(241,196,15,.8)}
+  @keyframes scroll{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+  
+  .about-text{max-width: 800px; margin: 0 auto; text-align: center; padding: 0 1rem;}
+  .about-text p{font-weight:400;font-size:1.05rem;color:rgba(245,230,200,.85);margin-bottom:1rem;letter-spacing:.02em;}
+
+  /* QUADRO DA IMAGEM - GRANDE */
+  .about-image-container {
+    width: 100%;
+    max-width: 1100px;
+    margin: 3.5rem auto 0;
+    padding: 0 1.5rem;
+  }
+  .neon-frame {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    overflow: hidden;
+    border: 4px solid var(--green);
+    box-shadow: 6px 6px 0 var(--ink), 0 0 40px rgba(76,175,80,.3);
+    background-color: var(--darker);
+  }
+  .neon-frame img {
+    width: 100%; height: 100%; object-fit: cover; object-position: center; display: block;
+    filter: sepia(.2) contrast(1.15) brightness(.85) saturate(1.2) hue-rotate(-5deg);
+  }
+  .neon-frame::after {
+    content: ""; position: absolute; inset: 0;
+    background: radial-gradient(circle at 50% 50%, transparent 40%, rgba(0,0,0,.85) 100%);
+    pointer-events: none;
+  }
+
+  /* HORÁRIOS */
+  #horarios{background:linear-gradient(180deg,var(--darker),var(--ink))}
+  .hours{display:grid;gap:.5rem;max-width:640px}
+  .hours .row{
+    display:flex;justify-content:space-between;padding:1rem 1.4rem;
+    border-bottom:2px dashed rgba(76,175,80,.35);
+    font-weight:600;font-size:1.05rem;text-transform:uppercase;letter-spacing:.05em;
+    background:rgba(76,175,80,.04);
+  }
+  .hours .row .day{color:var(--cream)}
+  .hours .row .time{color:var(--yellow);text-shadow:0 0 10px rgba(241,196,15,.4)}
+
+  /* CTA FINAL */
+  #contato{
+    text-align:center;
+    background:radial-gradient(ellipse at center,rgba(76,175,80,.35),transparent 60%),radial-gradient(ellipse at center bottom,rgba(142,68,173,.2),transparent 70%),var(--darker);
+    position:relative;overflow:hidden;
+  }
+  #contato::before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(-45deg,transparent 0 40px,rgba(241,196,15,.03) 40px 80px);pointer-events:none;}
+  #contato h2{font-weight:900;font-size:clamp(2.8rem,9vw,6.5rem);color:var(--cream);text-shadow:4px 4px 0 var(--green),8px 8px 0 var(--purple),12px 12px 0 var(--ink);position:relative;z-index:1;}
+  #contato p{font-weight:400;color:rgba(245,230,200,.85);max-width:520px;margin:0 auto 2.5rem;font-size:1.1rem;position:relative;z-index:1;}
+
+  /* FOOTER */
+  footer{padding:3rem 1.5rem;text-align:center;border-top:4px solid var(--green);background:var(--darker);position:relative;}
+  footer::before{content:"";position:absolute;top:0;left:0;right:0;height:6px;background:repeating-linear-gradient(90deg,var(--green) 0 12px,var(--ink) 12px 24px);opacity:.8;}
+  footer .fb{font-weight:900;font-size:clamp(1.8rem,5vw,3rem);text-transform:uppercase;letter-spacing:.02em;color:var(--cream);text-shadow:3px 3px 0 var(--yellow),6px 6px 0 var(--ink);}
+  footer .addr{font-weight:400;color:rgba(245,230,200,.65);margin-top:.8rem;font-size:.95rem;letter-spacing:.08em;}
+  footer .small{font-weight:400;color:rgba(245,230,200,.35);margin-top:2rem;font-size:.75rem;letter-spacing:.2em;text-transform:uppercase;}
+  footer .dev{margin-top:2.5rem;padding-top:1.8rem;border-top:1px solid rgba(76,175,80,.35);font-size:.9rem;letter-spacing:.06em;color:rgba(245,230,200,.7);}
+  footer .dev a{color:var(--yellow);text-decoration:none;font-weight:700;border-bottom:2px solid var(--yellow);padding-bottom:1px;transition:color .15s ease,border-color .15s ease;}
+  footer .dev a:hover{color:var(--green);border-color:var(--green);}
+
+  /* WHATSAPP FLUTUANTE */
+  .wa-float{
+    position:fixed;bottom:1.5rem;right:1.5rem;z-index:9999;
+    display:flex;align-items:center;justify-content:center;
+    width:64px;height:64px;border-radius:50%;
+    background:#25d366;color:#fff;text-decoration:none;
+    border:3px solid var(--ink);animation:pulse 2.4s infinite;transition:transform .15s ease;
+  }
+  .wa-float:hover{transform:scale(1.08)}
+  .wa-float svg{width:32px;height:32px;fill:#fff;flex-shrink:0}
+  @keyframes pulse{
+    0%,100%{box-shadow:0 0 26px rgba(37,211,102,.55),3px 3px 0 rgba(0,0,0,.8)}
+    50%{box-shadow:0 0 42px rgba(37,211,102,.9),3px 3px 0 rgba(0,0,0,.8)}
+  }
+
+  @media(max-width:760px){
+    section{padding:4rem 1.2rem}
+    .btn{padding:.9rem 1.8rem;font-size:.9rem}
+    .hud-top{font-size:.65rem;padding:.8rem 1rem;letter-spacing:.15em}
+    .hud-bars{bottom:1rem;left:1rem;font-size:.55rem}
+    .hud-bars .bar .track{width:90px}
+    .scroll-hint{bottom:1rem;right:1rem;font-size:.6rem}
+    .wa-float{bottom:1rem;right:1rem;width:56px;height:56px}
+    .wa-float svg{width:28px;height:28px}
+    .rgb-btn{bottom:1rem;left:1rem;width:56px;height:56px}
+    .rgb-btn svg{width:24px;height:24px}
+    
+    .about-image-container { padding: 0; margin-top: 2rem; width: 100%; }
+    .neon-frame { 
+      aspect-ratio: auto;
+      border-left: none; 
+      border-right: none; 
+    }
+    .neon-frame img {
+      height: auto;
+      object-fit: contain;
+    }
+  }
+</style>
+</head>
+<body>
+
+<!-- HERO -->
+<header class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-tint"></div>
+  <div class="hero-veil"></div>
+  <div class="sun"></div>
+  <div class="hud-top">
+    <span class="wanted">★ Dom Barbearia ★</span>
+    <span class="cash">$ 045.678 · PR</span>
+  </div>
+  <div class="hud-bars">
+    <div class="bar"><span class="label">Vida</span><div class="track"><div class="fill health"></div></div></div>
+    <div class="bar"><span class="label">Colete</span><div class="track"><div class="fill armor"></div></div></div>
+  </div>
+  <div class="hero-tag">Francisco Beltrão · PR</div>
+  <h1 class="logo">Dom<span>Barbearia</span></h1>
+  <p class="hero-sub">Corte na régua, acabamento no detalhe. Atitude de rua, estilo de rei. Bem-vindo ao Dom.</p>
+  <div class="cta-row">
+    <a class="btn solid" href="https://wa.me/5546991219785?text=Ol%C3%A1%20Dom%20Barbearia%2C%20vim%20pelo%20site" target="_blank" rel="noopener">Agendar agora</a>
+    <a class="btn" href="#servicos">Ver serviços</a>
+  </div>
+  <div class="scroll-hint">desce ↓</div>
+</header>
+
+<!-- SERVIÇOS -->
+<section id="servicos">
+  <div class="wrap">
+    <div class="kicker">O que a casa faz</div>
+    <h2>Serviços</h2>
+    <div class="cards">
+      <a class="card" href="https://wa.me/5546991219785?text=Ol%C3%A1%20Dom%20Barbearia%2C%20vim%20pelo%20site.%20Quero%20agendar%20o%20servi%C3%A7o%20de%20Corte" target="_blank" rel="noopener">
+        <div class="num">01</div>
+        <h3>Corte</h3>
+        <p>Máquina, tesoura, fade na régua. Do social ao degradê navalhado.</p>
+        <div class="price">R$ 45</div>
+        <span class="card-cta">Agendar no WhatsApp →</span>
+      </a>
+      <a class="card" href="https://wa.me/5546991219785?text=Ol%C3%A1%20Dom%20Barbearia%2C%20vim%20pelo%20site.%20Quero%20agendar%20o%20servi%C3%A7o%20de%20Barba" target="_blank" rel="noopener">
+        <div class="num">02</div>
+        <h3>Barba</h3>
+        <p>Toalha quente, navalha, óleo. Acabamento desenhado no compasso.</p>
+        <div class="price">R$ 35</div>
+        <span class="card-cta">Agendar no WhatsApp →</span>
+      </a>
+      <a class="card" href="https://wa.me/5546991219785?text=Ol%C3%A1%20Dom%20Barbearia%2C%20vim%20pelo%20site.%20Quero%20agendar%20o%20servi%C3%A7o%20de%20Combo%20Dom" target="_blank" rel="noopener">
+        <div class="num">03</div>
+        <h3>Combo Dom</h3>
+        <p>Corte + barba + sobrancelha. O pacote completo pra sair renovado.</p>
+        <div class="price">R$ 70</div>
+        <span class="card-cta">Agendar no WhatsApp →</span>
+      </a>
+      <a class="card" href="https://wa.me/5546991219785?text=Ol%C3%A1%20Dom%20Barbearia%2C%20vim%20pelo%20site.%20Quero%20agendar%20o%20servi%C3%A7o%20de%20Acabamento" target="_blank" rel="noopener">
+        <div class="num">04</div>
+        <h3>Acabamento</h3>
+        <p>Pezinho, contorno e retoque rápido pra manter o shape na semana.</p>
+        <div class="price">R$ 20</div>
+        <span class="card-cta">Agendar no WhatsApp →</span>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- SOBRE -->
+<section id="sobre">
+  <div class="stripe">
+    <div class="stripe-track">
+      <span>Dom Barbearia</span><span>Francisco Beltrão</span><span>Corte na régua</span><span>Atitude</span><span>Dom Barbearia</span><span>Francisco Beltrão</span><span>Corte na régua</span><span>Atitude</span>
+    </div>
+  </div>
+  
+  <div class="wrap">
+    <div class="about-text">
+      <div class="kicker">A casa</div>
+      <h2>Estilo é atitude</h2>
+      <p>Na Dom, a cadeira é trono e o espelho é palco. Cada corte sai com assinatura — sem pressa, sem achismo, no detalhe.</p>
+      <p>Ambiente de rua, atendimento de rei. Chega, senta, e sai com a cabeça no ponto.</p>
+    </div>
+  </div>
+
+  <!-- QUADRO DA IMAGEM GRANDE -->
+  <div class="about-image-container">
+    <div class="neon-frame">
+      <img src="capa.jpg" alt="Dom Barbearia">
+    </div>
+  </div>
+</section>
+
+<!-- HORÁRIOS -->
+<section id="horarios">
+  <div class="wrap">
+    <div class="kicker">Abre quando</div>
+    <h2>Horários</h2>
+    <div class="hours">
+      <div class="row"><span class="day">Segunda</span><span class="time">Fechado</span></div>
+      <div class="row"><span class="day">Terça a Sexta</span><span class="time">09h — 20h</span></div>
+      <div class="row"><span class="day">Sábado</span><span class="time">09h — 18h</span></div>
+      <div class="row"><span class="day">Domingo</span><span class="time">Fechado</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA FINAL -->
+<section id="contato">
+  <div class="wrap">
+    <div class="kicker">Bora marcar</div>
+    <h2>Sentar na cadeira</h2>
+    <p>Chama no WhatsApp, garante teu horário e chega na régua. Sem fila, sem espera.</p>
+    <a class="btn solid" href="https://wa.me/5546991219785?text=Ol%C3%A1%20Dom%20Barbearia%2C%20vim%20pelo%20site" target="_blank" rel="noopener">Chamar no WhatsApp</a>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="fb">Francisco Beltrão — PR</div>
+  <div class="addr">Dom Barbearia · Atendimento com hora marcada</div>
+  <div class="small">© Dom Barbearia · Todos os direitos reservados</div>
+  <div class="dev">
+    Desenvolvido por <a href="https://julianoodom12-creator.github.io/domwebsite-loja-virtual/" target="_blank" rel="noopener">Domwebsite</a>
+  </div>
+</footer>
+
+<!-- BOTÃO RGB -->
+<button class="rgb-btn" id="rgbBtn" aria-label="Alternar cor de fundo">
+  <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/><circle cx="12" cy="12" r="4"/></svg>
+</button>
+
+<!-- WHATSAPP FLUTUANTE -->
+<a class="wa-float" href="https://wa.me/5546991219785?text=Ol%C3%A1%20Dom%20Barbearia%2C%20vim%20pelo%20site" target="_blank" rel="noopener" aria-label="Falar no WhatsApp">
+  <svg viewBox="0 0 32 32" aria-hidden="true"><path d="M16 3C9.4 3 4 8.4 4 15c0 2.1.6 4.1 1.6 5.9L4 29l8.3-1.6c1.7.9 3.6 1.4 5.7 1.4 6.6 0 12-5.4 12-12S22.6 3 16 3zm0 21.8c-1.8 0-3.5-.5-5-1.4l-.4-.2-4.9.9.9-4.8-.3-.4c-1-1.6-1.5-3.4-1.5-5.3 0-5.4 4.4-9.8 9.8-9.8s9.8 4.4 9.8 9.8-4.4 9.8-9.8 9.8zm5.4-7.3c-.3-.1-1.7-.8-2-.9-.3-.1-.5-.1-.7.1-.2.3-.8.9-.9 1.1-.2.2-.3.2-.6.1-.3-.1-1.2-.5-2.3-1.4-.9-.8-1.4-1.7-1.6-2-.2-.3 0-.4.1-.6.1-.1.3-.3.4-.5.1-.2.2-.3.3-.5.1-.2 0-.4 0-.5-.1-.1-.7-1.6-.9-2.2-.2-.6-.5-.5-.7-.5h-.6c-.2 0-.5.1-.8.4-.3.3-1 1-1 2.5s1.1 2.9 1.2 3.1c.1.2 2.1 3.2 5.1 4.5.7.3 1.3.5 1.7.6.7.2 1.3.2 1.8.1.6-.1 1.7-.7 1.9-1.4.2-.7.2-1.2.2-1.3-.1-.2-.3-.2-.6-.3z"/></svg>
+</a>
+
+<script>
+  const rgbBtn = document.getElementById('rgbBtn');
+  rgbBtn.addEventListener('click', () => {
+    document.body.classList.toggle('rgb-mode-active');
+  });
+</script>
+
+</body>
+</html>
